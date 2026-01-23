@@ -4,6 +4,7 @@ import Home from './components/Home/Home'
 import ReadXL from './components/ReadXl/ReadXL'
 import { Route, Routes } from 'react-router-dom'
 import StudentAttendance from './components/StudentAttendance/StudentAttendance'
+import AttendanceViewer from './components/ReadXl/AttendanceViewer'
 
 const App = () => {
   return (
@@ -14,7 +15,10 @@ const App = () => {
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/attendance/:regdNo' element={<StudentAttendance />} />
+        
       </Routes>
+      {/* <ReadXL /> */}
+      <AttendanceViewer />
     </div>
   )
 }

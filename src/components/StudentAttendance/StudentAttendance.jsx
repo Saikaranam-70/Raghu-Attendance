@@ -58,6 +58,7 @@
 // };
 
 // export default StudentAttendance;
+
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { loadAttendanceFromExcel } from "../../utils/loadAttendance";
@@ -72,6 +73,7 @@ import {
   BarChart3,
   PieChart,
 } from "lucide-react";
+import { loadSubjectWiseAttendance } from "../../utils/loadSubjectWiseAttendance ";
 
 const StudentAttendance = () => {
   const { regdNo } = useParams();
@@ -84,6 +86,20 @@ const StudentAttendance = () => {
   const [classesPerDay, setClassesPerDay] = useState(6);
   const [skipClasses, setSkipClasses] = useState(0);
   const [skipMode, setSkipMode] = useState("classes"); // "classes" or "days"
+  const [subjectAttendance, setSubjectAttendance] = useState(null);
+
+
+  useEffect(() => {
+  loadSubjectWiseAttendance().then((allStudents) => {
+    const found = allStudents.find(
+      (s) => String(s.regdNo).trim() === String(regdNo).trim()
+    );
+    if (found) {
+      setSubjectAttendance(found.subjects);
+    }
+  });
+}, [regdNo]);
+
 
   useEffect(() => {
     loadAttendanceFromExcel()
@@ -582,6 +598,124 @@ const StudentAttendance = () => {
           </motion.div>
         </motion.div>
       </AnimatePresence>
+      {/* ================= SUBJECT WISE TABLE (WITH SHORTAGE CALC) ================= */}
+{subjectAttendance && (
+  <motion.div
+    variants={itemVariants}
+    initial="hidden"
+    animate="visible"
+    className="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 mt-10"
+  >
+    <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+      📚 Subject-wise Attendance
+    </h2>
+
+    <div className="space-y-4">
+      {Object.entries(subjectAttendance)
+        .filter(([subject]) => subject.trim() !== "")
+        .map(([subject, data], index) => {
+          const percent = Number(data.percentage || 0);
+          const isSafe = percent >= 75;
+
+          const classesNeeded = isSafe
+            ? 0
+            : Math.ceil((0.75 * data.total - data.attended) / 0.25);
+
+          return (
+            <motion.div
+              key={subject}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.06 }}
+              whileHover={{ scale: 1.015 }}
+              className="p-5 rounded-2xl border border-slate-200 bg-slate-50/50 hover:shadow-xl hover:ring-2 hover:ring-blue-200 transition-all"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-semibold text-slate-800">
+                  {subject}
+                </h3>
+
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                    isSafe
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-rose-100 text-rose-700"
+                  }`}
+                >
+                  {isSafe ? "Safe" : "Shortage"}
+                </span>
+              </div>
+
+              {/* Numbers */}
+              <div className="grid grid-cols-4 text-center mb-3">
+                <div>
+                  <p className="text-sm text-slate-500">Attended</p>
+                  <p className="text-lg font-bold text-blue-600">
+                    {data.attended}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-slate-500">Total</p>
+                  <p className="text-lg font-bold text-slate-700">
+                    {data.total}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-slate-500">%</p>
+                  <p className="text-lg font-bold text-slate-900">
+                    {percent.toFixed(1)}%
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-slate-500">Need</p>
+                  <p
+                    className={`text-lg font-bold ${
+                      isSafe ? "text-emerald-600" : "text-rose-600"
+                    }`}
+                  >
+                    {isSafe ? "0" : classesNeeded}
+                  </p>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(percent, 100)}%` }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className={`h-3 rounded-full ${
+                    isSafe
+                      ? "bg-gradient-to-r from-emerald-400 to-emerald-600"
+                      : "bg-gradient-to-r from-rose-400 to-rose-600"
+                  }`}
+                />
+              </div>
+
+              {/* Helper Text */}
+              {!isSafe && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-sm text-rose-600 mt-2 font-medium"
+                >
+                  ⚠️ Attend next <b>{classesNeeded}</b> classes continuously to
+                  reach 75%
+                </motion.p>
+              )}
+            </motion.div>
+          );
+        })}
+    </div>
+  </motion.div>
+)}
+{/* ========================================================================== */}
+
     </motion.div>
     </div>
   );

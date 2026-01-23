@@ -2,6 +2,7 @@ import { UserCircleIcon } from "@heroicons/react/24/outline";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from '../../assets/raghu.png'
+import ReadXL from "../ReadXl/ReadXL";
 
 const Home = () => {
   const navigate = useNavigate();
