@@ -1502,7 +1502,8 @@ const StudentAttendance = () => {
         if (!res.ok) throw new Error("Google Sheets fetch failed");
 
         const data = await res.json();
-        console.log(data.values);
+        
+        
         const rows = data.values;
         
         if (!rows || rows.length === 0) {
@@ -1540,6 +1541,7 @@ const StudentAttendance = () => {
                     attended: studentData.attended || 0
                   };
                 }
+
             }
           });
           return studentData;
